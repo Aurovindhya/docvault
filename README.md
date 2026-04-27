@@ -61,7 +61,7 @@ A full-stack application for uploading, storing, and semantically searching docu
 ### Run with Docker (recommended)
 
 ```bash
-git clone https://github.com/yourusername/docvault.git
+git clone https://github.com/Aurovindhya/docvault.git
 cd docvault
 docker compose up --build
 ```
