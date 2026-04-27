@@ -2,8 +2,6 @@
 
 A full-stack application for uploading, storing, and semantically searching documents using vector embeddings. Built to demonstrate end-to-end system design across a polyglot stack.
 
-![DocVault Architecture](./docs/architecture.png)
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -193,14 +191,10 @@ docvault/
 ## Design Decisions
 
 **Why pgvector instead of a dedicated vector DB (Pinecone, Milvus)?**
-For a document search use case at this scale, pgvector keeps the architecture simple — one DB for both relational and vector data. Dedicated vector DBs make sense at billions of vectors or when you need sub-10ms ANN at massive scale.
+For a document search use case at this scale, pgvector keeps the architecture simple, one DB for both relational and vector data. Dedicated vector DBs make sense at billions of vectors or when you need sub-10ms ANN at massive scale.
 
 **Why a separate Python service for embeddings?**
 `sentence-transformers` is a Python-native ecosystem. Calling it from Java via HTTP keeps each service in its strongest language, and makes the embedding model swappable without touching the Java codebase.
 
 **Why Spring Boot + JPA over something lighter?**
-Demonstrates enterprise-grade patterns: transactional service layer, repository abstraction, Spring Security with JWT filter chain — the kind of code that runs in production at scale.
-
-## License
-
-MIT
+Demonstrates enterprise-grade patterns: transactional service layer, repository abstraction, Spring Security with JWT filter chain, the kind of code that runs in production at scale.
