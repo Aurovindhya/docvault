@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: docvault-postgres
+    environment:
+      POSTGRES_DB: docvault
+      POSTGRES_USER: docvault
+      POSTGRES_PASSWORD: docvault_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend-java/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docvault"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend-python:
+    build:
+      context: ./backend-python
+      dockerfile: Dockerfile
+    container_name: docvault-embeddings
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_NAME=all-MiniLM-L6-v2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-java:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    container_name: docvault-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/docvault
+      SPRING_DATASOURCE_USERNAME: docvault
+      SPRING_DATASOURCE_PASSWORD: docvault_secret
+      EMBEDDINGS_SERVICE_URL: http://backend-python:8000
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production_use_long_random_string}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend-python:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: docvault-frontend
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+    depends_on:
+      - backend-java
+
+volumes:
+  postgres_data:
